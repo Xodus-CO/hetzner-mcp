@@ -2,7 +2,7 @@
   "name": "hetzner-mcp",
   "displayName": "Hetzner Cloud",
   "version": "0.1.0",
-  "description": "Manage Hetzner Cloud resources directly from Cursor via MCP.",
+  "description": "Manages Hetzner Cloud from Cursor via MCP: full CRUD for servers, load balancers, networks, volumes, firewalls, floating/primary IPs, SSH keys, placement groups; pricing and metadata; action polling.",
   "author": {
     "name": "Xodus CO"
   },

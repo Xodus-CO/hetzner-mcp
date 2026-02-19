@@ -12,7 +12,7 @@
     {
       "name": "hetzner-mcp",
       "source": "hetzner-mcp",
-      "description": "Manage Hetzner Cloud resources (servers, load balancers, networks, volumes, firewalls) via MCP."
+      "description": "Manages Hetzner Cloud from Cursor via MCP: full CRUD for servers, load balancers, networks, volumes, firewalls, floating/primary IPs, SSH keys, placement groups; pricing and metadata; action polling."
     }
   ]
 }

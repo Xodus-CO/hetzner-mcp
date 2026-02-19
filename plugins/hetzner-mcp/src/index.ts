@@ -13,7 +13,7 @@ OpenAPI.TOKEN = token;
 
 const server = new McpServer(
     { name: "hetzner-cloud", version: "0.1.0" },
-    { capabilities: { tools: {} } }
+    { capabilities: { tools: { listChanged: false } } }
 );
 
 registerTools(server);

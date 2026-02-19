@@ -2,7 +2,7 @@
 
 A comprehensive Hetzner Cloud integration for Cursor, powered by a native TypeScript MCP server. Manage your infrastructure directly from your IDE using natural language.
 
-[Get Hetzner Cloud](https://hetzner.cloud/?ref=IAYKetqPnlq9) — new signups get €20 credit; I get €10 once you’ve spent €10.
+[Get Hetzner Cloud](https://hetzner.cloud/?ref=IAYKetqPnlq9) — new signups get €20 credit.
 
 <img src="assets/hetzner.svg" width="140" alt="Hetzner logo" />
 

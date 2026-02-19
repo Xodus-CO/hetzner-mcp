@@ -1,5 +1,5 @@
 
-import { McpServer } from "./mcp-server.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
     ServersService,
     LoadBalancersService,
@@ -47,9 +47,22 @@ async function withToolError(run: () => Promise<ToolResult>): Promise<ToolResult
     }
 }
 
+function registerTool(
+    server: McpServer,
+    name: string,
+    description: string,
+    parameters: z.ZodRawShape,
+    handler: (args: any) => Promise<ToolResult>
+): void {
+    server.registerTool(name, {
+        description,
+        inputSchema: Object.keys(parameters).length > 0 ? z.object(parameters) : undefined,
+    }, handler);
+}
+
 export function registerTools(server: McpServer) {
     // --- Servers ---
-    server.tool(
+    registerTool(server,
         "list_servers",
         "List all servers",
         {},
@@ -59,7 +72,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_server",
         "Create a new server",
         {
@@ -79,7 +92,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_server",
         "Delete a server",
         { id: z.number() },
@@ -89,7 +102,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "change_server_type",
         "Change the type of a server (scales resources). Server must be powered off.",
         {
@@ -106,7 +119,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "power_on_server",
         "Power on a server",
         { id: z.number() },
@@ -116,7 +129,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "power_off_server",
         "Power off a server (hard)",
         { id: z.number() },
@@ -126,7 +139,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "reboot_server",
         "Reboot a server (soft)",
         { id: z.number() },
@@ -136,7 +149,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "shutdown_server",
         "Shutdown a server (soft)",
         { id: z.number() },
@@ -146,7 +159,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "reset_server",
         "Reset a server (hard)",
         { id: z.number() },
@@ -156,7 +169,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_server",
         "Update a server (name, labels)",
         {
@@ -173,7 +186,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "attach_iso",
         "Attach an ISO to a server",
         {
@@ -189,7 +202,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "detach_iso",
         "Detach an ISO from a server",
         { id: z.number() },
@@ -199,7 +212,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "attach_server_to_network",
         "Attach a server to a network",
         {
@@ -217,7 +230,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "detach_server_from_network",
         "Detach a server from a network",
         {
@@ -234,7 +247,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- Load Balancers ---
-    server.tool(
+    registerTool(server,
         "list_load_balancers",
         "List all load balancers",
         {},
@@ -244,7 +257,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_load_balancer",
         "Create a new load balancer",
         {
@@ -261,7 +274,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_load_balancer",
         "Delete a load balancer",
         { id: z.number() },
@@ -271,7 +284,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_load_balancer",
         "Update a load balancer (name, labels)",
         {
@@ -288,7 +301,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "add_load_balancer_target",
         "Add a target to a load balancer",
         {
@@ -308,7 +321,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "remove_load_balancer_target",
         "Remove a target from a load balancer",
         {
@@ -327,7 +340,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "add_load_balancer_service",
         "Add a service to a load balancer",
         {
@@ -367,7 +380,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_load_balancer_service",
         "Delete a service from a load balancer",
         {
@@ -384,7 +397,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- Networks ---
-    server.tool(
+    registerTool(server,
         "list_networks",
         "List all networks",
         {},
@@ -394,7 +407,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_network",
         "Create a new network",
         {
@@ -408,7 +421,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_network",
         "Delete a network",
         { id: z.number() },
@@ -418,7 +431,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_network",
         "Update a network (name, labels)",
         {
@@ -435,7 +448,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "add_network_subnet",
         "Add a subnet to a network (e.g. for private networking 10.0.0.0/16 in a zone)",
         {
@@ -454,7 +467,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_network_subnet",
         "Delete a subnet from a network (detach servers from it first)",
         {
@@ -471,7 +484,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- Volumes ---
-    server.tool(
+    registerTool(server,
         "list_volumes",
         "List all volumes",
         {},
@@ -481,7 +494,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_volume",
         "Create a new volume",
         {
@@ -499,7 +512,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_volume",
         "Update a volume (name, labels)",
         {
@@ -516,7 +529,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "attach_volume",
         "Attach a volume to a server",
         {
@@ -533,7 +546,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "detach_volume",
         "Detach a volume",
         { id: z.number() },
@@ -543,7 +556,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_volume",
         "Delete a volume (must be detached; all data destroyed)",
         { id: z.number() },
@@ -554,7 +567,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- Firewalls ---
-    server.tool(
+    registerTool(server,
         "list_firewalls",
         "List all firewalls",
         {},
@@ -564,7 +577,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_firewall",
         "Create a new firewall",
         {
@@ -578,7 +591,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_firewall",
         "Update a firewall (name, labels)",
         {
@@ -595,7 +608,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_firewall",
         "Delete a firewall (must not be in use)",
         { id: z.number() },
@@ -606,7 +619,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- Floating IPs ---
-    server.tool(
+    registerTool(server,
         "list_floating_ips",
         "List all floating IPs",
         {},
@@ -616,7 +629,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_floating_ip",
         "Create a floating IP",
         {
@@ -632,7 +645,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_floating_ip",
         "Update a floating IP (description, labels)",
         {
@@ -649,7 +662,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "assign_floating_ip",
         "Assign a floating IP to a server",
         {
@@ -665,7 +678,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "unassign_floating_ip",
         "Unassign a floating IP",
         { id: z.number() },
@@ -675,7 +688,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_floating_ip",
         "Delete a floating IP (unassigns from server if attached)",
         { id: z.number() },
@@ -686,7 +699,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- Primary IPs ---
-    server.tool(
+    registerTool(server,
         "list_primary_ips",
         "List all Primary IPs (static IPs bound to a datacenter, assignable to one server)",
         {},
@@ -696,7 +709,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_primary_ip",
         "Create a Primary IP (datacenter-scoped; server must be off to assign). Provide datacenter OR assignee_id (server).",
         {
@@ -722,7 +735,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "get_primary_ip",
         "Get a single Primary IP by ID",
         { id: z.number() },
@@ -732,7 +745,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_primary_ip",
         "Update a Primary IP (name, labels)",
         {
@@ -749,7 +762,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_primary_ip",
         "Delete a Primary IP (unassigns from server if assigned; server must be off)",
         { id: z.number() },
@@ -759,7 +772,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "assign_primary_ip",
         "Assign a Primary IP to a server (server must be powered off)",
         {
@@ -775,7 +788,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "unassign_primary_ip",
         "Unassign a Primary IP from its server (server must be powered off)",
         { id: z.number() },
@@ -786,7 +799,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- SSH Keys ---
-    server.tool(
+    registerTool(server,
         "list_ssh_keys",
         "List all SSH keys",
         {},
@@ -796,7 +809,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_ssh_key",
         "Create a new SSH key",
         {
@@ -810,7 +823,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_ssh_key",
         "Update an SSH key (name, labels)",
         {
@@ -827,7 +840,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_ssh_key",
         "Delete an SSH key",
         { id: z.number() },
@@ -838,7 +851,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- General Info ---
-    server.tool(
+    registerTool(server,
         "list_locations",
         "List all locations",
         {},
@@ -848,7 +861,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "list_images",
         "List all images",
         {},
@@ -858,7 +871,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "list_server_types",
         "List all server types",
         {},
@@ -868,7 +881,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "list_load_balancer_types",
         "List all load balancer types (for create_load_balancer load_balancer_type)",
         {},
@@ -878,7 +891,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "list_datacenters",
         "List all datacenters (e.g. ash-dc1; where servers can be created)",
         {},
@@ -888,7 +901,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "list_actions",
         "List actions (optionally filter by id, status); use to poll/wait for create/delete results",
         {
@@ -904,7 +917,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "get_action",
         "Get a single action by ID (e.g. to check progress or status after create/delete)",
         { id: z.number() },
@@ -914,7 +927,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "get_pricing",
         "Get all prices",
         {},
@@ -925,7 +938,7 @@ export function registerTools(server: McpServer) {
     );
 
     // --- Placement Groups ---
-    server.tool(
+    registerTool(server,
         "list_placement_groups",
         "List all placement groups",
         {},
@@ -935,7 +948,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "create_placement_group",
         "Create a new placement group",
         {
@@ -949,7 +962,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "delete_placement_group",
         "Delete a placement group",
         { id: z.number() },
@@ -959,7 +972,7 @@ export function registerTools(server: McpServer) {
         })
     );
 
-    server.tool(
+    registerTool(server,
         "update_placement_group",
         "Update a placement group (name, labels)",
         {

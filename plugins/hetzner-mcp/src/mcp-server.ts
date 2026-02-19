@@ -1,14 +1,6 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import {
-    ListToolsRequestSchema,
-    CallToolRequestSchema,
-    ErrorCode,
-    McpError,
-    type Tool
-} from "@modelcontextprotocol/sdk/types.js";
+import { McpServer as SdkMcpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 type ToolHandler<T extends z.ZodRawShape> = (
     args: z.infer<z.ZodObject<T>>
@@ -17,47 +9,15 @@ type ToolHandler<T extends z.ZodRawShape> = (
     isError?: boolean;
 }>;
 
+/**
+ * Thin wrapper around the SDK McpServer that exposes .tool(name, description, parameters, handler)
+ * and delegates to registerTool for compatibility with existing register-tools.ts.
+ */
 export class McpServer {
-    private server: Server;
-    private tools: Map<
-        string,
-        {
-            description?: string;
-            parameters: z.ZodObject<any>;
-            handler: ToolHandler<any>;
-        }
-    > = new Map();
+    private sdk: SdkMcpServer;
 
     constructor(info: { name: string; version: string }) {
-        this.server = new Server(info, {
-            capabilities: {
-                tools: {},
-            },
-        });
-
-        this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-            return {
-                tools: Array.from(this.tools.entries()).map(([name, tool]): Tool => ({
-                    name,
-                    description: tool.description,
-                    inputSchema: zodToJsonSchema(tool.parameters) as Tool["inputSchema"],
-                })),
-            };
-        });
-
-        this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-            const tool = this.tools.get(request.params.name);
-            if (!tool) {
-                throw new McpError(ErrorCode.MethodNotFound, `Tool not found: ${request.params.name}`);
-            }
-
-            const args = tool.parameters.safeParse(request.params.arguments);
-            if (!args.success) {
-                throw new McpError(ErrorCode.InvalidParams, `Invalid arguments: ${args.error.message}`);
-            }
-
-            return await tool.handler(args.data);
-        });
+        this.sdk = new SdkMcpServer(info, { capabilities: { tools: {} } });
     }
 
     tool<T extends z.ZodRawShape>(
@@ -65,15 +25,15 @@ export class McpServer {
         description: string,
         parameters: T,
         handler: ToolHandler<T>
-    ) {
-        this.tools.set(name, {
-            description,
-            parameters: z.object(parameters),
-            handler,
-        });
+    ): void {
+        this.sdk.registerTool(
+            name,
+            { description, inputSchema: z.object(parameters) },
+            async (args) => handler(args as z.infer<z.ZodObject<T>>)
+        );
     }
 
-    async connect(transport: Transport) {
-        return this.server.connect(transport);
+    async connect(transport: Transport): Promise<void> {
+        return this.sdk.connect(transport);
     }
 }

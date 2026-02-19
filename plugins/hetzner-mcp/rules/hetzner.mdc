@@ -1,0 +1,40 @@
+---
+description: Standards for Hetzner Cloud resource management
+alwaysApply: true
+---
+
+# Hetzner Cloud Rules
+
+These rules apply to all interactions with the Hetzner Cloud MCP server.
+
+## Resource Management
+
+1.  **Check Before Creating**: Always attempt to `list_*` resources (servers, volumes, networks) before creating new ones to avoid duplicates, unless explicitly instructed to create a new resource.
+2.  **Use Labels**: When creating resources, always try to apply meaningful `labels` (e.g., `environment: dev`, `project: hetzner-plugin`) to help with organization and filtering.
+3.  **Cleanup**: If a creation step fails partway through a multi-step process, offer to clean up any partially created resources.
+
+## Async Actions
+
+1.  **Action Awareness**: Many write operations (create, delete, power, attach) return an `Action` object. This means the operation is asynchronous.
+2.  **Monitoring**: If the user needs confirmation of completion, you may need to check the action status or the resource status subsequently.
+
+## Security
+
+1.  **SSH Keys**: When creating servers, prefer using SSH keys (`ssh_keys` parameter) over password authentication for better security.
+2.  **Firewalls**: Suggest applying firewalls to public-facing servers.
+
+## Safety
+
+1.  **Critical Resource Deletion**: Ask for explicit confirmation before deleting resources with `production` or `prod` in their name or labels.
+
+## Performance & Reliability
+
+1.  **Location Colocation**: Ensure Servers and Volumes are in the same location for optimal performance.
+
+## Cost Optimization
+
+1.  **Unused Resources**: Warn about detached Volumes or Floating IPs that still incur costs (they are billed even when not attached).
+
+## Networking
+
+1.  **Private Networking**: Suggest using private networks (`networks` parameter) for communication between servers instead of public IPs to improve security and reduce latency.

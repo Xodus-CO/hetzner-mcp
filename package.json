@@ -1,0 +1,11 @@
+{
+  "name": "hetzner-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hetzner Cloud MCP plugin for Cursor (template repo)",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-template.mjs",
+    "build": "cd plugins/hetzner-mcp && npm run build"
+  }
+}

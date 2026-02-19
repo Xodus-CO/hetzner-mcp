@@ -1,0 +1,43 @@
+{
+  "name": "hetzner-mcp",
+  "displayName": "Hetzner Cloud",
+  "version": "0.1.0",
+  "description": "Manage Hetzner Cloud resources directly from Cursor via MCP.",
+  "author": {
+    "name": "Xodus CO"
+  },
+  "license": "MIT",
+  "keywords": [
+    "hetzner",
+    "cloud",
+    "mcp",
+    "devops",
+    "cursor"
+  ],
+  "logo": "assets/hetzner.svg",
+  "publisher": "cursor-user",
+  "categories": [
+    "Cloud",
+    "DevOps"
+  ],
+  "main": "dist/index.js",
+  "icon": "assets/hetzner.svg",
+  "engines": {
+    "cursor": "^0.1.0"
+  },
+  "contributes": {
+    "mcpServers": [
+      {
+        "id": "hetzner-cloud-server",
+        "name": "Hetzner Cloud",
+        "command": "node",
+        "args": [
+          "${workspaceFolder}/plugins/hetzner-mcp/dist/index.js"
+        ],
+        "env": {
+          "HCLOUD_TOKEN": "${env:HCLOUD_TOKEN}"
+        }
+      }
+    ]
+  }
+}

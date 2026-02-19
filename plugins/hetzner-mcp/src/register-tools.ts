@@ -19,7 +19,11 @@ import {
     FloatingIpActionsService,
     LoadBalancerActionsService,
     NetworkActionsService,
-    PricingService
+    PricingService,
+    ActionsService,
+    LoadBalancerTypesService,
+    DatacentersService,
+    PrimaryIpActionsService,
 } from "hetzner-sdk-ts";
 import { z } from "zod";
 
@@ -431,6 +435,41 @@ export function registerTools(server: McpServer) {
         })
     );
 
+    server.tool(
+        "add_network_subnet",
+        "Add a subnet to a network (e.g. for private networking 10.0.0.0/16 in a zone)",
+        {
+            id: z.number().describe("Network ID"),
+            type: z.enum(["cloud", "server", "vswitch"]),
+            network_zone: z.string().describe("Network zone, e.g. eu-central"),
+            ip_range: z.string().optional().describe("CIDR, e.g. 10.0.0.0/24; omit for auto /24"),
+            vswitch_id: z.number().optional().describe("Required if type is vswitch"),
+        },
+        async ({ id, type, network_zone, ip_range, vswitch_id }) => withToolError(async () => {
+            const response = await NetworkActionsService.postNetworksActionsAddSubnet({
+                id,
+                requestBody: { type, network_zone, ip_range, vswitch_id }
+            });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "delete_network_subnet",
+        "Delete a subnet from a network (detach servers from it first)",
+        {
+            id: z.number().describe("Network ID"),
+            ip_range: z.string().describe("IP range of subnet to delete, e.g. 10.0.1.0/24"),
+        },
+        async ({ id, ip_range }) => withToolError(async () => {
+            const response = await NetworkActionsService.postNetworksActionsDeleteSubnet({
+                id,
+                requestBody: { ip_range }
+            });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
     // --- Volumes ---
     server.tool(
         "list_volumes",
@@ -504,6 +543,16 @@ export function registerTools(server: McpServer) {
         })
     );
 
+    server.tool(
+        "delete_volume",
+        "Delete a volume (must be detached; all data destroyed)",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            await VolumesService.deleteVolumes({ id });
+            return { content: [{ type: "text", text: "Volume deleted successfully" }] };
+        })
+    );
+
     // --- Firewalls ---
     server.tool(
         "list_firewalls",
@@ -543,6 +592,16 @@ export function registerTools(server: McpServer) {
                 requestBody: { name, labels }
             });
             return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "delete_firewall",
+        "Delete a firewall (must not be in use)",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            await FirewallsService.deleteFirewalls({ id });
+            return { content: [{ type: "text", text: "Firewall deleted successfully" }] };
         })
     );
 
@@ -616,6 +675,116 @@ export function registerTools(server: McpServer) {
         })
     );
 
+    server.tool(
+        "delete_floating_ip",
+        "Delete a floating IP (unassigns from server if attached)",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            await FloatingIPsService.deleteFloatingIps({ id });
+            return { content: [{ type: "text", text: "Floating IP deleted successfully" }] };
+        })
+    );
+
+    // --- Primary IPs ---
+    server.tool(
+        "list_primary_ips",
+        "List all Primary IPs (static IPs bound to a datacenter, assignable to one server)",
+        {},
+        async () => withToolError(async () => {
+            const response = await PrimaryIPsService.getPrimaryIps({});
+            return { content: [{ type: "text", text: JSON.stringify(response.primary_ips, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "create_primary_ip",
+        "Create a Primary IP (datacenter-scoped; server must be off to assign). Provide datacenter OR assignee_id (server).",
+        {
+            name: z.string(),
+            type: z.enum(["ipv4", "ipv6"]),
+            datacenter: z.string().optional().describe("ID or name of datacenter (omit if assignee_id set)"),
+            assignee_id: z.number().optional().describe("Server ID to assign to immediately (omit if datacenter set)"),
+            auto_delete: z.boolean().optional(),
+            labels: z.record(z.string()).optional(),
+        },
+        async (args) => withToolError(async () => {
+            const requestBody = {
+                name: args.name,
+                type: args.type,
+                assignee_type: "server" as const,
+                datacenter: args.datacenter,
+                assignee_id: args.assignee_id,
+                auto_delete: args.auto_delete,
+                labels: args.labels,
+            };
+            const response = await PrimaryIPsService.postPrimaryIps({ requestBody: requestBody as any });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "get_primary_ip",
+        "Get a single Primary IP by ID",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            const response = await PrimaryIPsService.getPrimaryIps1({ id });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "update_primary_ip",
+        "Update a Primary IP (name, labels)",
+        {
+            id: z.number(),
+            name: z.string().optional(),
+            labels: z.record(z.string()).optional(),
+        },
+        async ({ id, name, labels }) => withToolError(async () => {
+            const response = await PrimaryIPsService.putPrimaryIps({
+                id,
+                requestBody: { name, labels }
+            });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "delete_primary_ip",
+        "Delete a Primary IP (unassigns from server if assigned; server must be off)",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            await PrimaryIPsService.deletePrimaryIps({ id });
+            return { content: [{ type: "text", text: "Primary IP deleted successfully" }] };
+        })
+    );
+
+    server.tool(
+        "assign_primary_ip",
+        "Assign a Primary IP to a server (server must be powered off)",
+        {
+            id: z.number().describe("Primary IP ID"),
+            server: z.number().describe("Server ID"),
+        },
+        async ({ id, server }) => withToolError(async () => {
+            const response = await PrimaryIpActionsService.postPrimaryIpsActionsAssign({
+                id,
+                requestBody: { assignee_id: server, assignee_type: "server" }
+            });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "unassign_primary_ip",
+        "Unassign a Primary IP from its server (server must be powered off)",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            const response = await PrimaryIpActionsService.postPrimaryIpsActionsUnassign({ id });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
     // --- SSH Keys ---
     server.tool(
         "list_ssh_keys",
@@ -658,6 +827,16 @@ export function registerTools(server: McpServer) {
         })
     );
 
+    server.tool(
+        "delete_ssh_key",
+        "Delete an SSH key",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            await SshKeysService.deleteSshKeys({ id });
+            return { content: [{ type: "text", text: "SSH key deleted successfully" }] };
+        })
+    );
+
     // --- General Info ---
     server.tool(
         "list_locations",
@@ -686,6 +865,52 @@ export function registerTools(server: McpServer) {
         async () => withToolError(async () => {
             const response = await ServerTypesService.getServerTypes({});
             return { content: [{ type: "text", text: JSON.stringify(response.server_types, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "list_load_balancer_types",
+        "List all load balancer types (for create_load_balancer load_balancer_type)",
+        {},
+        async () => withToolError(async () => {
+            const response = await LoadBalancerTypesService.getLoadBalancerTypes({});
+            return { content: [{ type: "text", text: JSON.stringify(response.load_balancer_types, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "list_datacenters",
+        "List all datacenters (e.g. ash-dc1; where servers can be created)",
+        {},
+        async () => withToolError(async () => {
+            const response = await DatacentersService.getDatacenters({});
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "list_actions",
+        "List actions (optionally filter by id, status); use to poll/wait for create/delete results",
+        {
+            id: z.number().optional(),
+            status: z.enum(["running", "success", "error"]).optional(),
+            sort: z.string().optional(),
+            page: z.number().optional(),
+            per_page: z.number().optional(),
+        },
+        async (args) => withToolError(async () => {
+            const response = await ActionsService.getActions(args as any);
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
+        })
+    );
+
+    server.tool(
+        "get_action",
+        "Get a single action by ID (e.g. to check progress or status after create/delete)",
+        { id: z.number() },
+        async ({ id }) => withToolError(async () => {
+            const response = await ActionsService.getActions1({ id });
+            return { content: [{ type: "text", text: JSON.stringify(response, null, 2) }] };
         })
     );
 

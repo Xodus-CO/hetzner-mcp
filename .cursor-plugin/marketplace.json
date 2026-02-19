@@ -1,7 +1,7 @@
 {
   "name": "hetzner-mcp",
   "owner": {
-    "name": "Xodus CO"
+    "name": "Xodus-CO"
   },
   "metadata": {
     "description": "Hetzner Cloud MCP plugin for Cursor",

@@ -16,7 +16,8 @@ These rules apply to all interactions with the Hetzner Cloud MCP server.
 ## Async Actions
 
 1.  **Action Awareness**: Many write operations (create, delete, power, attach) return an `Action` object. This means the operation is asynchronous.
-2.  **Monitoring**: If the user needs confirmation of completion, you may need to check the action status or the resource status subsequently.
+2.  **Polling**: Use `list_actions` (filter by `status: "running"`) or `get_action(id)` to check completion when the user needs confirmation.
+3.  **Monitoring**: After triggering an action, you may need to poll or re-query the resource to confirm it is ready.
 
 ## Security
 
@@ -26,6 +27,7 @@ These rules apply to all interactions with the Hetzner Cloud MCP server.
 ## Safety
 
 1.  **Critical Resource Deletion**: Ask for explicit confirmation before deleting resources with `production` or `prod` in their name or labels.
+2.  **Primary IPs**: Assigning or unassigning a Primary IP requires the server to be powered off; power off before `assign_primary_ip` or `unassign_primary_ip`, then power on after if needed.
 
 ## Performance & Reliability
 
@@ -34,7 +36,9 @@ These rules apply to all interactions with the Hetzner Cloud MCP server.
 ## Cost Optimization
 
 1.  **Unused Resources**: Warn about detached Volumes or Floating IPs that still incur costs (they are billed even when not attached).
+2.  **Cleanup**: When tearing down, use the appropriate delete tools: `delete_volume`, `delete_floating_ip`, `delete_primary_ip`, `delete_firewall`, `delete_load_balancer`, `delete_network` (after subnets/servers), `delete_server`, and `delete_ssh_key` as needed.
 
 ## Networking
 
 1.  **Private Networking**: Suggest using private networks (`networks` parameter) for communication between servers instead of public IPs to improve security and reduce latency.
+2.  **Network Zones**: A network belongs to one zone (e.g. eu-central). All subnets and servers on that network must be in the same zone; use `add_network_subnet` for subnets within the zone. Do not assume one network can span zones (e.g. eu-central and ash).
